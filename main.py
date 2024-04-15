@@ -1,10 +1,14 @@
+# Imports OpenCV and Matplotlib's pyplot
 import cv2 as cv
 import matplotlib.pyplot as plt
 
 
+# Detects faces and crops images
 def recognize_face(img):
+    # Turns the image grey for the detector to recognize the face
     grey_img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
+    # Initializes the face class for face detection
     face_class = cv.CascadeClassifier(
         cv.data.haarcascades + "haarcascade_frontalface_default.xml"
     )
@@ -36,6 +40,8 @@ def compare_face(img1, img2):
     face_img1 = rgb_img1[y1:y1+h1, x1:x1+w1]
     face_img2 = rgb_img2[y2:y2+h2, x2:x2+w2]
 
+
+    # Shows both figures for debugging
     plt.figure(figsize=(20,10))
     plt.imshow(face_img1)
     plt.axis('off')
@@ -46,19 +52,9 @@ def compare_face(img1, img2):
 
     plt.show()
 
-    hist1 = cv.calcHist([grey_img1], [0], None, [256], [0, 256])
-    hist2 = cv.calcHist([grey_img2], [0], None, [256], [0, 256])
+    # Make calls to the Siamese NN
 
-    similarity = cv.compareHist(hist1, hist2, cv.HISTCMP_CHISQR)
 
-    threshold = 1000
-
-    if similarity < threshold:
-        print(similarity)
-        return True
-    else:
-        print(similarity)
-        return False
 
 
 
