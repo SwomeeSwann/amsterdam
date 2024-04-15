@@ -6,33 +6,39 @@ import matplotlib.pyplot as plt
 # Detects faces and crops images
 def recognize_face(img):
     # Turns the image grey for the detector to recognize the face
-    grey_img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    gray_img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
     # Initializes the face class for face detection
     face_class = cv.CascadeClassifier(
         cv.data.haarcascades + "haarcascade_frontalface_default.xml"
     )
 
+    # Detects faces in the image
     picFace = face_class.detectMultiScale(
-        grey_img, scaleFactor=1.2593, minNeighbors=4, minSize=(50,50)
+        gray_img, scaleFactor=1.2593, minNeighbors=4, minSize=(50,50)
     )
 
+    # Creates rectangles around faces detected
     for (x, y, w, h) in picFace:
         cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 4)
 
-
+    # Transforms the image into an rgb one for matplotlib
     img_rgb =cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
-    return picFace, img_rgb, grey_img
+    # return the picture of the face, the rgb image (for debugging), and the gray image for matplotlib
+    return picFace, img_rgb, gray_img
 
 
 def compare_face(img1, img2):
-    face1, rgb_img1, grey_img1 = recognize_face(img1)
-    face2, rgb_img2, grey_img2 = recognize_face(img2)
+    # Gets faces from the recognition
+    face1, rgb_img1, gray_img1 = recognize_face(img1)
+    face2, rgb_img2, gray_img2 = recognize_face(img2)
 
+    # If no faces are found, automatically return False
     if len(face1) == 0 or len(face2) == 0:
         return False
 
+    # Gets the x, y, height, and width of face
     (x1, y1, w1, h1) = face1[0]
     (x2, y2, w2, h2) = face2[0]
 
