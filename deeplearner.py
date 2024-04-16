@@ -64,6 +64,8 @@ optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
 img = cv.imread("faces/s1/1.pgm", cv.IMREAD_GRAYSCALE)
 img2 = cv.imread("faces/s1/2.pgm", cv.IMREAD_GRAYSCALE)
 
+optimizer.zero_grad()
+
 img_tensor = torch.from_numpy(img).unsqueeze(0).unsqueeze(0).float()
 img_tensor2 = torch.from_numpy(img2).unsqueeze(0).unsqueeze(0).float()
 
