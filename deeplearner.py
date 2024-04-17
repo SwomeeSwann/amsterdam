@@ -5,9 +5,11 @@ import random
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 
-images1 = ["faces/s1/1.pgm", "faces/s6/3.pgm", "faces/s30/7.pgm", "faces/s19/9.pgm", "faces/s2/4.pgm", "faces/s7/3.pgm"]
-images2 = ["faces/s1/9.pgm", "faces/s2/4.pgm", "faces/s4/3.pgm", "faces/s19/7.pgm", "faces/s3/4.pgm", "faces/s7/10.pgm"]
-labels = [1, 0, 0, 1, 0, 1]
+images1 = ["faces/s1/1.pgm", "faces/s6/3.pgm", "faces/s30/7.pgm", "faces/s19/9.pgm", "faces/s2/4.pgm", "faces/s7/3.pgm", "faces/s37/2.pgm", "faces/s26/8.pgm", "faces/s40/1.pgm", "faces/s28/5.pgm", "faces/s40/6.pgm", "faces/s8/5.pgm"]
+images2 = ["faces/s1/9.pgm", "faces/s2/4.pgm", "faces/s4/3.pgm", "faces/s19/7.pgm", "faces/s3/4.pgm", "faces/s7/10.pgm", "faces/s5/9.pgm", "faces/s26/3.pgm", "faces/s40/10.pgm", "faces/s21/1.pgm", "faces/s3/10.pgm", "faces/s8/6.pgm"]
+labels = [1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1]
+
+
 
 class SiameseDataset():
     def __init__(self) -> None:
@@ -73,6 +75,8 @@ class ContrastiveLoss(nn.Module):
 
 
 network = SiameseNetwork()
+network.load_state_dict(torch.load("state.pt"))
+
 data = SiameseDataset
 contrastive_loss = ContrastiveLoss()
 
@@ -84,40 +88,39 @@ negative_values = []
 positive_values = []
 
 for epoch in range(num_epochs):
-    
-    img1, img2, label = data.getDataSet()
+    for i in range(int(len(labels) / 2)):
+        img1, img2, label = data.getDataSet()
 
-    optimizer.zero_grad()
+        optimizer.zero_grad()
 
-    img_tensor = torch.from_numpy(img1).unsqueeze(0).unsqueeze(0).float()
-    img_tensor2 = torch.from_numpy(img2).unsqueeze(0).unsqueeze(0).float()
+        img_tensor = torch.from_numpy(img1).unsqueeze(0).unsqueeze(0).float()
+        img_tensor2 = torch.from_numpy(img2).unsqueeze(0).unsqueeze(0).float()
 
 
-    x = network.forward_once(img_tensor)
-    y = network.forward_once(img_tensor2)
+        x = network.forward_once(img_tensor)
+        y = network.forward_once(img_tensor2)
 
-    label = torch.tensor([label])
-    loss = contrastive_loss(x, y, label)
+        label = torch.tensor([label])
+        loss = contrastive_loss(x, y, label)
 
-    loss.backward()
-    optimizer.step()
-    print(label.item(), loss.item())
-    if label.item() == 0:
-        negative_values.append(loss.item())
-    else:
-        positive_values.append(loss.item())
+        loss.backward()
+        optimizer.step()
+        print(label.item(), loss.item())
+        if label.item() == 0:
+            negative_values.append(loss.item())
+        else:
+            positive_values.append(loss.item())
         
     
 
 plt.plot(negative_values, marker='o', linestyle='-')
 plt.grid(True)
-plt.title("Negative")
+plt.title("Loss Value Over Training")
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 
 plt.plot(positive_values, marker='x', linestyle='-')
 plt.grid(True)
-plt.title("Negative")
-plt.xlabel('Epoch')
-plt.ylabel('Loss')
 plt.show()
+
+torch.save(network.state_dict(), "state.pt")
