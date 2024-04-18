@@ -4,7 +4,7 @@ import cv2 as cv
 import random
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
-import faceDetect as fd
+import faceDetect as fd # type: ignore
 
 images1 = ["faces/s1/1.pgm", "faces/s6/3.pgm", "faces/s30/7.pgm", "faces/s19/9.pgm", "faces/s2/4.pgm", "faces/s7/3.pgm", "faces/s37/2.pgm", "faces/s26/8.pgm", "faces/s40/1.pgm", "faces/s28/5.pgm", "faces/s40/6.pgm", "faces/s8/5.pgm", "faces/s17/2.pgm", "faces/s19/3.pgm"]
 images2 = ["faces/s1/9.pgm", "faces/s2/4.pgm", "faces/s4/3.pgm", "faces/s19/7.pgm", "faces/s3/4.pgm", "faces/s7/10.pgm", "faces/s5/9.pgm", "faces/s26/3.pgm", "faces/s40/10.pgm", "faces/s21/1.pgm", "faces/s3/10.pgm", "faces/s8/6.pgm", "faces/s20/9.pgm", "faces/s19/10.pgm"]
@@ -20,7 +20,9 @@ class SiameseDataset():
         randomSet = random.randint(0, len(labels) - 1)
         img1 = cv.imread(images1[randomSet], cv.IMREAD_GRAYSCALE)
         img2 = cv.imread(images2[randomSet], cv.IMREAD_GRAYSCALE)
-        print(img1)
+
+        img1 = cv.resize(img1, (100, 100))
+        img2 = cv.resize(img2, (100, 100))
 
         return img1, img2, labels[randomSet]
 
@@ -44,9 +46,9 @@ class SiameseNetwork(nn.Module):
         )
 
         self.fc = nn.Sequential(
-            nn.Linear(6144, 1024),  # Reduce the number of neurons
+            nn.Linear(25, 256),  # Reduce the number of neurons
             nn.ReLU(inplace=True),
-            nn.Linear(1024, 512),  # Reduce the number of neurons further
+            nn.Linear(256, 512),  # Reduce the number of neurons further
             nn.ReLU(inplace=True),
             nn.Linear(512, 256),  # Further reduction
             nn.ReLU(inplace=True),
@@ -95,8 +97,8 @@ def train(num_epochs):
 
             optimizer.zero_grad()
 
-            img_tensor = torch.from_numpy(img1).unsqueeze(0).unsqueeze(0).float()
-            img_tensor2 = torch.from_numpy(img2).unsqueeze(0).unsqueeze(0).float()
+            img_tensor = torch.from_numpy(img1).unsqueeze(0).float()
+            img_tensor2 = torch.from_numpy(img2).unsqueeze(0).float()
 
 
             out1, out2 = network.forward(img_tensor, img_tensor2)
