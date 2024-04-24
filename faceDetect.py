@@ -3,6 +3,7 @@ import cv2 as cv
 import deeplearner as dl
 import torch
 import torch.nn.functional as F
+import os
 
 # Detects faces and crops images
 def recognize_face(img):
@@ -10,7 +11,7 @@ def recognize_face(img):
 
     # Initializes the face class for face detection
     face_class = cv.CascadeClassifier(
-        cv.data.haarcascades + "haarcascade_frontalface_default.xml"
+        cv.data.haarcascades + "haarcascade_frontalface_default.xml" # type: ignore
     )
 
     # Detects faces in the image
@@ -32,18 +33,22 @@ def recognize_face(img):
     return face
 
 if __name__ == "__main__":
-    img = cv.imread("mahogany.jpg")
-    img2 = cv.imread("majd.jpg")
+
+    model = dl.SiameseNetwork()
+    model.load_state_dict(torch.load("state.pt"))
+    model.eval()
+
+    img = cv.imread("pictures/mahogany.jpg")
+    img2 = cv.imread("pictures/majd.jpg")
 
     crop = recognize_face(img)
     crop2 = recognize_face(img2)
 
-    crop_tensor = torch.from_numpy(crop).unsqueeze(0).float()
-    crop_tensor2 = torch.from_numpy(crop2).unsqueeze(0).float()
+    crop_tensor = torch.tensor(crop, dtype=torch.float32).unsqueeze(0)
+    crop2_tensor = torch.tensor(crop2, dtype=torch.float32).unsqueeze(0)
 
-    result = dl.network.forward_once(crop_tensor)
-    result2 = dl.network.forward_once(crop_tensor2)
+    out, out2 = model(crop_tensor, crop2_tensor)
 
-    loss = F.pairwise_distance(result, result2)
+    loss = F.pairwise_distance(out, out2).mean()
 
-    print(loss[0])
+    print(loss)
