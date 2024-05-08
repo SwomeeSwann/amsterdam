@@ -5,6 +5,7 @@ import torch
 import torch.nn.functional as F
 import os
 
+
 # Detects faces and crops images
 def recognize_face(img):
     gray_img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -27,28 +28,41 @@ def recognize_face(img):
         face = gray_img[y:y+h, x:x+h]
 
         face = cv.resize(face, (100, 100))
-    # Transforms the image into an rgb one for matplotlib
+        
+        return face
 
-    # return the picture of the face, the rgb image (for debugging), and the gray image for matplotlib
-    return face
+    return None
 
 if __name__ == "__main__":
-
+    # Pulls the NN from deeplearner.py and switches to eval mode
     model = dl.SiameseNetwork()
-    model.load_state_dict(torch.load("state.pt"))
     model.eval()
 
-    img = cv.imread("pictures/mahogany.jpg")
-    img2 = cv.imread("pictures/majd.jpg")
+    # Gets the length of comparison directory
+    len_directory = len(os.listdir("pictures"))
+    directory = os.listdir("pictures")
+    print(directory, len_directory)
 
-    crop = recognize_face(img)
-    crop2 = recognize_face(img2)
+    # Loop to compare all images (No working algorithm yet)
+    for i in range(0, len_directory - 1):
+        for j in range(i, len_directory - 1):
+            path = os.path.join("pictures", directory[i])
+            path2 = os.path.join("pictures", directory[j])
 
-    crop_tensor = torch.tensor(crop, dtype=torch.float32).unsqueeze(0)
-    crop2_tensor = torch.tensor(crop2, dtype=torch.float32).unsqueeze(0)
+            img = cv.imread(path)
+            img2 = cv.imread(path2)
 
-    out, out2 = model(crop_tensor, crop2_tensor)
+            crop = recognize_face(img)
+            crop2 = recognize_face(img2)
 
-    loss = F.pairwise_distance(out, out2).mean()
+            if not crop.any() == None and not crop2.any() == None:
+                crop_tensor = torch.from_numpy(crop).unsqueeze(0).unsqueeze(0).float()  
+                crop2_tensor = torch.from_numpy(crop2).unsqueeze(0).unsqueeze(0).float()  
 
-    print(loss)
+                out, out2 = model(crop_tensor, crop2_tensor)
+
+                loss = F.pairwise_distance(out, out2)
+
+                print("Difference: ", loss.item())
+            else:
+                print("No Face found for one of the images")
